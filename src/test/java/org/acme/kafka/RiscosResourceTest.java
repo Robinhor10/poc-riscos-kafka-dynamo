@@ -25,42 +25,42 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class RiscosResourceTest {
 
     @TestHTTPResource("/consumed-riscos")
-    URI consumedMovies;
+    URI consumedRiscos;
 
     @Test
     public void testHelloEndpoint() throws InterruptedException {
-        // cria um client para `consumed-riscos` and collect the consumed resources in a list
+        // cria um client para `consumed-riscos` e coleta recursos consumidos da lista
         Client client = ClientBuilder.newClient();
-        WebTarget target = client.target(consumedMovies);
+        WebTarget target = client.target(consumedRiscos);
 
         List<String> received = new CopyOnWriteArrayList<>();
 
         SseEventSource source = SseEventSource.target(target).build();
         source.register(inboundSseEvent -> received.add(inboundSseEvent.readData()));
 
-        // in a separate thread, feed the `MovieResource`
-        ExecutorService movieSender = startSendingMovies();
+        // em thread separada, feed the `RiscoResource`
+        ExecutorService riscoSender = startSendingRiscos();
 
         source.open();
 
-        // check if, after at most 5 seconds, we have at least 2 items collected, and they are what we expect
+        //verifica se depois de 5 segundos, tem 2 itens coletados e se está conforme esperado
         await().atMost(5, SECONDS).until(() -> received.size() >= 2);
-        assertThat(received, Matchers.hasItems("'Teste robinho' from 2023",
-                "'Teste robinho 2' from 2023"));
+        assertThat(received, Matchers.hasItems("Cliente1 teste cartao 10,00",
+                "Cliente2 teste veiculos 50000,00"));
         source.close();
 
         // shutdown the executor that is feeding the `MovieResource`
-        movieSender.shutdownNow();
-        movieSender.awaitTermination(5, SECONDS);
+        riscoSender.shutdownNow();
+        riscoSender.awaitTermination(5, SECONDS);
     }
 
-    private ExecutorService startSendingMovies() {
+    private ExecutorService startSendingRiscos() {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.execute(() -> {
             while (true) {
                 given()
                         .contentType(ContentType.JSON)
-                        .body("{\"id_cadastro\":\"123\",\"id_documento\":\"123\",\"registro\":\"teste\"}")
+                        .body("{\"cadastro\":\"Cliente1\",\"documento\":\"teste\",\"produto\":\"cartao\",\"valor\":\"10,00\"}")
                 .when()
                         .post("/riscos")
                 .then()
@@ -68,7 +68,7 @@ public class RiscosResourceTest {
 
                 given()
                         .contentType(ContentType.JSON)
-                        .body("{\"id_cadastro\":\"123\",\"id_documento\":\"123\",\"registro\":\"teste\"}")
+                        .body("{\"cadastro\":\"Cliente2\",\"documento\":\"teste\",\"produto\":\"veiculos\",\"valor\":\"50000,00\"}")
                 .when()
                         .post("/riscos")
                 .then()

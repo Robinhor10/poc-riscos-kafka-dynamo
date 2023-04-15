@@ -14,12 +14,14 @@ public class RiscoRequestDto {
  
   String cadastro;
   String documento;
+  String produto;
   String valor; 
 
   public Risco toAvro() {
     return Risco.newBuilder()
     .setCadastro(this.cadastro)
     .setDocumento(this.documento)
+    .setProduto(this.produto)
     .setValor(this.valor)
     .build();
   }
