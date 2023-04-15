@@ -12,6 +12,10 @@
       "type": "string"
     },
     {
+      "name": "produto",
+      "type": "string"
+    },
+    {
       "name": "valor",
       "type": "string"
     }
